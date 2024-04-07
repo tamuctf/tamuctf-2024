@@ -1,0 +1,21 @@
+<% if flash[:notice] %>
+  <div id="notice" style="color: green"><%= flash[:notice] %></div>
+<% end %>
+
+<% if flash[:alert] %>
+  <div id="alert" style="color: red"><%= flash[:alert] %></div>
+<% end %>
+
+
+<h1>Enter your registered email</h1>
+
+<%= form_with(url: recover_password_path, local: true) do |form| %>
+  <div>
+    <%= form.label :email %>
+    <%= form.email_field :email %>
+  </div>
+
+  <div>
+    <%= form.submit "Submit" %>
+  </div>
+<% end %>

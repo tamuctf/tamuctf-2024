@@ -1,0 +1,25 @@
+[package]
+name = "alien"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+cortex-m = { version = "0.7.7", features = ["critical-section-single-core"] }
+cortex-m-rtic = "1.1.4"
+hex-literal = "0.4.1"
+lm3s6965 = { git = "https://github.com/japaric/lm3s6965.git", rev = "facf63aa0169c773175a143f6014a1d0977fb74f" }
+lm3s6965-uart = { path = "../lm3s6965-uart" }
+rand_chacha = { version = "0.3.1", default-features = false }
+
+[build-dependencies]
+hex = "0.4.3"
+hex-literal = "0.4.1"
+rand_chacha = { version = "0.3.1", default-features = false }
+
+[profile.release]
+strip = true
+lto = true
+opt-level = 3
+debug = false

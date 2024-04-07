@@ -1,0 +1,60 @@
+[workspace]
+ctf-name = "tamuctf-2024"
+
+[network]
+base-chal-port = 55000
+ctfd-proxy-port = 60443
+site-proxy-port = 61443
+stream-proxy-port = 62443
+
+[nginx]
+domain = "tamuctf.com"
+become = "root"
+cert-path = "/etc/letsencrypt/live/tamuctf.com-0001"
+
+[ctfd]
+url = "http://192.168.200.3:8000"
+scoring-type = "dynamic"
+# this is only for dynamic
+points = 500
+decay-limit = 100
+minimum = 100
+
+[virtual-machines]
+
+[virtual-machines.settings]
+vnetif = "vboxnet2"
+ipv4_range = "192.168.200.0/24"
+install-path = "/home/vagrantboxes/"
+become = "vagrantboxes"
+
+# memory and disk in MB
+[virtual-machines.container-registry]
+name = "tamuctf-2024-registry"
+cores = 2
+memory = 2048
+disk-size = 20480
+type = "docker"
+ip = "192.168.200.2"
+
+[virtual-machines.frontend]
+name = "tamuctf-2024-ctfd"
+cores = 4
+memory = 4098
+disk-size = 20480
+type = "ctfd"
+ip = "192.168.200.3"
+# ports accept two syntaxes:
+#   "port" which is an implicit "port:port"
+#   "host_port:service_port"
+ports = ["8000"]
+image = "ctfd/ctfd:latest"
+static-dir-key = "5d6b407ee061e8696136d4dfd25f24b0"
+
+[virtual-machines.challenge.0]
+name = "tamuctf-2024-chals-0"
+cores = 10
+memory = 8192
+disk-size = 20480
+type = "challenges"
+ip = "192.168.200.4"

@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--Title courtesy of c0br4_-->
+  <title>Discorb</title>
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <script>
+    function save_chat(user) {
+      messages = document.getElementById('chat').innerHTML;
+      localStorage.setItem(user, messages);
+    }
+
+    function load_chat(user) {
+      messages = localStorage.getItem(user);
+      document.getElementById('chat').innerHTML = messages;
+    }
+
+    function set_active_dm(dom, e) {
+      e.preventDefault();
+      prev = document.getElementById('active-dm');
+
+      if(prev != dom) {
+        dom.id = prev.id;
+        prev.id = '';
+
+        dom.classList.add('active');
+        prev.classList.remove('active');
+
+        dom.children[0].children[0].style.opacity=0;
+
+        save_chat(prev.name);
+        load_chat(dom.name);
+      }
+    }
+
+    function parse_user(user) {
+      user = user.split('#');
+      if(user.length == 2 && user[1].length == 4 && /^\d+$/.test(user[1]))
+        return true;
+      return false;
+    }
+
+    function new_dm() {
+      modal_box = document.getElementById('new-dm-box');
+      user = modal_box.value
+      modal_box.value = '';
+
+      if(user != '' && parse_user(user)) {
+        dms = localStorage.getItem('dms');
+        names = []
+        if(dms != null) {
+          names = JSON.parse(dms);
+        }
+        if(!names.includes(user)) {
+          names.push(user);
+          localStorage.setItem('dms', JSON.stringify(names));
+
+          dm_list = document.getElementById('user-list');
+          dm_list.innerHTML = `<li class="nav-item"><a href="" name="${user}" class="nav-link text-white" onclick="set_active_dm(this, event)"><svg class="bi bi-circle-fill" width="16" height="16"><circle cx="8" cy="8" r="8" fill="white" opacity="0"/></svg> ${user}</a></li>` + dm_list.innerHTML
+          set_active_dm(user);
+        }
+      } 
+    }
+
+    var socket;
+    function scrollToBottom() {
+      chat = document.getElementById('chat');
+      chat.scrollTop = chat.scrollHeight;
+    }
+    $(document).ready(function(){
+      scrollToBottom();
+      dms = localStorage.getItem('dms');
+      if(dms != null) {
+        for(const user of JSON.parse(dms)) {
+          dm_list = document.getElementById('user-list');
+          dm_list.innerHTML = `<li class="nav-item"><a href="" name="${user}" class="nav-link text-white" onclick="set_active_dm(this, event)"><svg class="bi bi-circle-fill" width="16" height="16"><circle cx="8" cy="8" r="8" fill="white" opacity="0"/></svg> ${user}</a></li>` + dm_list.innerHTML
+        }
+      }
+      socket = io();
+      socket.on('connect', function(){
+        socket.emit('join');
+      });
+      socket.on('message', function(data) {
+        chat = document.getElementById('chat');
+        active = document.getElementById('active-dm');
+        if(active.textContent.trim() != data.from && data.to != data.from) {
+          from = document.getElementsByName(data.from)[0];
+          if(from != undefined) {
+            from.children[0].children[0].style.opacity=1;
+          } else {
+            dms = localStorage.getItem('dms');
+            names = []
+            if(dms != null) {
+              names = JSON.parse(dms);
+            }
+            if(!names.includes(data.from)) {
+              names.push(data.from);
+              localStorage.setItem('dms', JSON.stringify(names));
+
+              dm_list = document.getElementById('user-list');
+              dm_list.innerHTML = `<li class="nav-item"><a href="" name="${data.from}" class="nav-link text-white" onclick="set_active_dm(this, event)"><svg class="bi bi-circle-fill" width="16" height="16"><circle cx="8" cy="8" r="8" fill="white" opacity="1"/></svg> ${data.from}</a></li>` + dm_list.innerHTML
+            }
+          }
+          messages = localStorage.getItem(data.from);
+          if(messages != null) {
+            localStorage.setItem(data.from, messages + data.content);
+          } else {
+            localStorage.setItem(data.from, data.content);
+          }
+        } else {
+          let scrolling = chat.scrollTop + chat.clientHeight < chat.scrollHeight;
+          chat.insertAdjacentHTML('beforeend', data.content);
+          if (!scrolling) scrollToBottom();
+          save_chat(active.name);
+        }
+      });
+      $('#message-box').keypress(function(e) {
+        var code = e.keyCode || e.which;
+        if(code == 13) {
+          message = $('#message-box').val();
+          if(message != '') {
+            dst = document.getElementById('active-dm').name;
+            $('#message-box').val('');
+            if(message != '/flag') {
+              socket.emit('json', {'to': dst, 'message': message, 'time': moment().format('h:mm:ss A')});
+            } else {
+              socket.emit('flag');
+            }
+          }
+        }
+      });
+      $('#logout-button').click(function(event) {
+        event.preventDefault();
+        localStorage.clear();
+        window.location = this.href;
+      });
+    }); 
+    window.onload = scrollToBottom()
+  </script>
+  <style>
+  body {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+
+    font-family: Arial, sans-serif;
+    background-color: #36393e;
+  }
+
+  .container {
+    display: grid;
+    grid-template-rows: 92.5% 7.5%;
+    height: 100vh;
+    padding-left: 2.5vw;
+  }
+
+  .chat {
+    width: 100%;
+    height: 100%;
+
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+
+  .chat::-webkit-scrollbar {
+    display: none;
+  }
+
+  .message {
+    padding: 10px;
+    padding-bottom: 0;
+  }
+
+  .message .sender {
+    color: white;
+    font-weight: bold;
+  }
+
+  .message .timestamp {
+    font-size: 0.8em;
+    color: #949BA4;
+  }
+
+  .message p {
+    margin-top: 0.5em;
+    color: #D6D6DC;
+  }
+
+  .message-box {
+    background-color: #383A40;
+    color: white;
+    border-radius: 8px;
+    width: 95%;
+    height: 45px;
+    padding-left: 15px;
+    font-size: 16px;
+
+    border: none;
+    box-shadow: none;
+    outline: none;
+  }
+
+  .message-box::placeholder {
+    color: #848690;
+  }
+
+  .sidebar {
+    background-color: #282b30;
+  }
+
+  .sidebar button {
+    min-width: 100%;
+    text-align: left;
+  }
+
+  .sidebar a:hover, .sidebar button:hover{
+    background-color: #36393d;
+  }
+  </style>
+  </head>
+  <body>
+    <div class="sidebar d-flex flex-column flex-shrink-0 p-3 text-white" style="width: 15vw;">
+      <a href="/" class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-white text-decoration-none">
+        <svg class="bi me-2" width="40" height="32"><use xlink:href="#bootstrap"></use></svg>
+        <span class="fs-4">Discorb</span>
+      </a>
+      <hr>
+      <ul id="user-list" class="nav nav-pills flex-column mb-auto">
+        <li class="nav-item">
+          <a id="active-dm" href="" name="admin#0000" class="nav-link active text-white" onclick="set_active_dm(this, event)">
+            <svg class="bi bi-circle-fill" width="16" height="16"><circle cx="8" cy="8" r="8" fill="white" opacity="0"/></svg>
+            admin#0000
+          </a>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link text-white" data-bs-toggle="modal" data-bs-target="#new-dm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
+              <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+            </svg>
+            Start new DM
+          </button>
+        </li>
+      </ul>
+      <hr>
+      <div class="dropdown">
+        <a href="#" class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" id="dropdownUser1" data-bs-toggle="dropdown">
+          <strong>{{current_user.username}}</strong>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-dark text-small shadow" aria-labelledby="dropdownUser1">
+          <li><a id="logout-button" class="dropdown-item" href="/api/auth/logout">Sign out</a></li> 
+        </ul>
+      </div>
+    </div>
+    <div class="container">
+      <div id="chat" class="chat">
+        {{payload | safe}}
+      </div>
+      <input 
+        id="message-box" 
+        type="text" 
+        class="message-box" 
+        placeholder="Message"
+        />
+    </div>
+    <div class="modal fade" id="new-dm" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="background: #1e2124 !important;">
+          <div class="modal-header" style="border: none">
+            <h1 class="modal-title fs-5 text-white">Start DM</h1>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <input id="new-dm-box" type="text" class="message-box" placeholder="example#1234">
+          </div>
+          <div class="modal-body">
+            <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="new_dm()">Add</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

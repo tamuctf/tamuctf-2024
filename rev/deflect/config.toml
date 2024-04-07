@@ -1,0 +1,3 @@
+[settings]
+deploy = true
+containers = false

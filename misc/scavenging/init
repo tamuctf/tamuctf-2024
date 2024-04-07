@@ -1,0 +1,9 @@
+#!/bin/sh
+
+ls -alh /init
+cat /init
+
+mount -t ramfs -o size=32m ramfs /mnt
+cp -ra /inner/* /mnt/
+
+exec switch_root /mnt /bin/sh

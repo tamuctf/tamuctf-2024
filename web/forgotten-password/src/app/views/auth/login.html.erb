@@ -1,0 +1,19 @@
+<h1>Login</h1>
+
+<%= form_with(local: true) do |form| %>
+  <div>
+    <%= form.label :username %>
+    <%= form.text_field :username %>
+  </div>
+
+  <div>
+    <%= form.label :password %>
+    <%= form.password_field :password %>
+  </div>
+
+  <div>
+    <%= form.submit "Login" %>
+  </div>
+
+  <%= link_to 'Forgot password?', forgot_password_path %>
+<% end %>

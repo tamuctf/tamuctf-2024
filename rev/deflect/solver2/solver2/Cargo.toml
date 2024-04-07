@@ -1,0 +1,24 @@
+[package]
+name = "solver2"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[features]
+default = []
+tun = []
+
+[dependencies]
+aya = { git = "https://github.com/aya-rs/aya", features = ["async_tokio"] }
+aya-log = { git = "https://github.com/aya-rs/aya" }
+clap = { version = "4.1", features = ["derive"] }
+solver2-common = { path = "../solver2-common", features = ["user"] }
+anyhow = "1"
+env_logger = "0.10"
+libc = "0.2"
+log = "0.4"
+tokio = { version = "1.25", features = ["macros", "rt", "rt-multi-thread", "net", "signal"] }
+
+[[bin]]
+name = "solver2"
+path = "src/main.rs"

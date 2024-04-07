@@ -1,0 +1,6 @@
+[settings]
+# toggles discoverability at time of deployment
+deploy = true
+# true if challenge needs containers hosted
+containers = false
+# health_check = false

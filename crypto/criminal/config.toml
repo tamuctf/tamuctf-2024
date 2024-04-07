@@ -1,0 +1,28 @@
+[settings]
+# toggles discoverability at time of deployment
+deploy = true
+# true if challenge needs containers hosted
+containers = true
+# health_check = false
+
+# ============================================================
+# NOTE: the following are only necessary if hosting containers
+# This can be safely removed
+# ============================================================
+
+[services]
+# define public facing services here
+# format: [services.<service-name>] -- be descriptive
+# port: internal docker port (see CPORTS in makefile)
+# type: nginx type (site or stream)
+[services.pwn]
+port = 1337
+type = "stream"
+
+[nginx]
+# least_conn := single-service,
+#   connect to instance with least connections
+# ip_hash := multi-service, ensure
+#   contestant connects to same instance
+balance_method = "least_conn"
+instances = 5

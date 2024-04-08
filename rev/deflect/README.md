@@ -88,7 +88,7 @@ There are 3 main ways to do this:
 2. Write another eBPF program that intercepts and modifies packets.
 3. Use [nfqueue](https://home.regit.org/netfilter-en/using-nfqueue-and-libnetfilter_queue/) to redirect the packets to a userspace program for modification.
 
-I decided to go with the third strategy since implementing a TCP/IP stack in userspace is annoying (for example, if you use raw sockets, you need to drop outbound RST packets since the Linux kernel will try to terminate TCP connections that it didn't make). The second strategy is implemented in courtesy of Addison in `solver2`.
+I decided to go with the third strategy since implementing a TCP/IP stack in userspace is annoying (for example, if you use raw sockets, you need to drop outbound RST packets since the Linux kernel will try to terminate TCP connections that it didn't make). The second strategy is implemented courtesy of Addison in `solver2`.
 
 To correctly implement custom sequence numbers using the third strategy, we need to be careful about what sequence numbers are perceived by our client program that makes the GET request. In particular, we need the sequence/acknowledgment numbers in the server's response packets to match the client's expected values prior to modification of the initial sequence number (if they don't match, then the connection will be closed by the kernel).
 

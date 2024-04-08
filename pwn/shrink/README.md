@@ -18,7 +18,7 @@ struct string {
     } stack_buf_or_capacity;
 };
 ```
-Since `std::string` also stores a null terminator, the threshold of stack storage is 15 bytes (the capacity is hardcoded to 15 when the stack buffer is active). When the length exceeds 15 bytes, the contents are placed on the heap, and the first 8 bytes of the stack buffer are used for the capacity. The key observation is that this optimization is re-applied when the user calls `shrink_to_fit`; if the length falls below 15 bytes, then the buffer will be relocated to the stack buffer.
+Since `std::string` also stores a null terminator, the threshold of stack storage is 15 bytes (the capacity is hardcoded to 15 when the stack buffer is active). When the length exceeds 15 bytes, the contents are placed on the heap, and the first 8 bytes of the stack buffer are used for the capacity. The key observation is that this optimization is re-applied when the user calls `shrink_to_fit`; if the length is less than or equal to 15 bytes, then the contents of `buf` will be relocated to `stack_buf`.
 
 Now, for the actual exploitation. A `win` function is provided, so the general goal is to get a stack buffer overflow with a short string, then overwrite the return address.
 
